@@ -1,0 +1,61 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-in-docker
+{
+	"name": "",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
+
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "installZsh":	true,
+      "upgradePackages": false,
+      "dockerVersion": "latest",
+			"enableNonRootDocker": "true",
+			"moby": "true"
+		},
+		"ghcr.io/robbert229/devcontainer-features/opentofu:1": {
+			"version": "1.9.0"
+		},
+		"ghcr.io/devcontainers/features/go:1": {
+        	"version": "1.23"
+    	}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"EditorConfig.EditorConfig",
+				"Gruntfuggly.todo-tree",
+				"yzhang.markdown-all-in-one",
+				"ms-vscode.makefile-tools"
+			]
+		}
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [
+		9080, // keycloak
+		9081, // demo-webapp
+		9082  // demo-backend
+	],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "tofu version; go version"
+
+
+	// Use 'postStartCommand' to run commands after the container is created like starting minikube.
+	// "postStartCommand": "nohup bash -c 'minikube start &' > minikube.log 2>&1",
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+
+	// The following configuration is required to use devcontainers with rootless podman
+	// https://medium.com/@guillem.riera/making-visual-studio-code-devcontainer-work-properly-on-rootless-podman-8d9ddc368b30
+	// "containerUser": "vscode",
+	// "runArgs": [
+	// 	"--userns=keep-id:uid=1000,gid=1000"
+	// ],
+	// "updateRemoteUserUID": true
+}
