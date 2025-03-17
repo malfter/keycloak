@@ -2,17 +2,21 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/coreos/go-oidc"
-	"github.com/gin-gonic/gin"
 )
 
+type contextKey string
+
 const (
-	issuerURL = "http://localhost:9080/realms/keycloak-demo"
-	clientID  = "demo-webapp"
+	issuerURL            = "http://localhost:9080/realms/keycloak-demo"
+	clientID             = "demo-webapp"
+	claimsKey contextKey = "claims"
 )
 
 var verifier *oidc.IDTokenVerifier
@@ -28,50 +32,49 @@ func init() {
 }
 
 // Middleware to check Authorization header
-func authMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
-		if tokenString == "" || len(tokenString) < 8 || tokenString[:7] != "Bearer " {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid Authorization header"})
-			c.Abort()
+func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tokenString := r.Header.Get("Authorization")
+		if tokenString == "" || len(tokenString) < 8 || !strings.HasPrefix(tokenString, "Bearer ") {
+			http.Error(w, "Missing or invalid Authorization header", http.StatusUnauthorized)
 			return
 		}
 
 		tokenString = tokenString[7:]
-		ctx := context.Background()
+		ctx := r.Context()
 		token, err := verifier.Verify(ctx, tokenString)
 		if err != nil {
 			fmt.Println("error:", err)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "details": err.Error()})
-			c.Abort()
+			http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
 
 		// Extract user information from token
 		var claims map[string]interface{}
 		if err := token.Claims(&claims); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse claims"})
-			c.Abort()
+			http.Error(w, "Failed to parse claims", http.StatusInternalServerError)
 			return
 		}
 
-		c.Set("claims", claims)
-		c.Next()
+		// Store claims in the request context
+		ctx = context.WithValue(r.Context(), claimsKey, claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }
 
-func serviceHandler(c *gin.Context) {
-	claims, _ := c.Get("claims")
-	c.JSON(http.StatusOK, gin.H{
+func serviceHandler(w http.ResponseWriter, r *http.Request) {
+	claims := r.Context().Value(claimsKey).(map[string]interface{})
+	response := map[string]interface{}{
 		"message": "Authenticated successfully",
 		"claims":  claims,
-	})
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 func main() {
-	r := gin.Default()
-	r.GET("/", authMiddleware(), serviceHandler)
+	http.HandleFunc("/", authMiddleware(serviceHandler))
 
 	fmt.Println("Server running on port 9082")
-	r.Run(":9082")
+	log.Fatal(http.ListenAndServe(":9082", nil))
 }
