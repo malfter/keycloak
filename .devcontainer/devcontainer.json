@@ -26,7 +26,8 @@
 				"EditorConfig.EditorConfig",
 				"Gruntfuggly.todo-tree",
 				"yzhang.markdown-all-in-one",
-				"ms-vscode.makefile-tools"
+				"ms-vscode.makefile-tools",
+				"humao.rest-client"
 			]
 		}
 	},
@@ -39,7 +40,7 @@
 	],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "tofu version; go version"
+	"postCreateCommand": "tofu version; go version; ./.devcontainer/scripts/installRequirements.sh"
 
 
 	// Use 'postStartCommand' to run commands after the container is created like starting minikube.

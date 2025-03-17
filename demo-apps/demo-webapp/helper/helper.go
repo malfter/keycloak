@@ -19,27 +19,27 @@ func FormatJSON(jsonData []byte) ([]byte, error) {
 
 // DecodeToken takes a JWT token string and returns a map of its claims
 func DecodeToken(tokenString string) (map[string]interface{}, error) {
-    // Split the token into its three parts
-    parts := strings.Split(tokenString, ".")
-    if len(parts) != 3 {
-        return nil, fmt.Errorf("invalid token format")
-    }
+	// Split the token into its three parts
+	parts := strings.Split(tokenString, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid token format")
+	}
 
-    // Decode the payload (second part) from base64
-    payload, err := base64.RawURLEncoding.DecodeString(parts[1])
-    if err != nil {
-        return nil, fmt.Errorf("error decoding payload: %v", err)
-    }
+	// Decode the payload (second part) from base64
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("error decoding payload: %v", err)
+	}
 
-    // Parse the JSON payload into a map
-    var claims map[string]interface{}
-    err = json.Unmarshal(payload, &claims)
-    if err != nil {
-        return nil, fmt.Errorf("error parsing claims: %v", err)
-    }
+	// Parse the JSON payload into a map
+	var claims map[string]interface{}
+	err = json.Unmarshal(payload, &claims)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing claims: %v", err)
+	}
 
-    // Return the parsed claims
-    return claims, nil
+	// Return the parsed claims
+	return claims, nil
 }
 
 // DecodeIDToken decode and parse the ID token

@@ -1,0 +1,14 @@
+# https://marketplace.visualstudio.com/items?itemName=humao.rest-client
+@keycloakBaseURL = http://localhost:9080
+@keycloakRealm = keycloak-demo
+@serviceAccountUsername = tuser
+@serviceAccountPassword = NyK9bkyz2JOi7cscCM8Epkz96A3OhEF3
+
+### Get access token
+POST {{keycloakBaseURL}}/realms/{{keycloakRealm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id={{serviceAccountUsername}}
+&client_secret={{serviceAccountPassword}}
+&scope=openid profile email offline_access

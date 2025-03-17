@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,14 +15,12 @@ import (
 type contextKey string
 
 const (
-	issuerURL            = "http://localhost:9080/realms/keycloak-demo"
-	clientID             = "demo-webapp"
 	claimsKey contextKey = "claims"
 )
 
 var verifier *oidc.IDTokenVerifier
 
-func init() {
+func initVerifier(issuerURL, clientID string) {
 	ctx := context.Background()
 	provider, err := oidc.NewProvider(ctx, issuerURL)
 	if err != nil {
@@ -69,12 +68,30 @@ func serviceHandler(w http.ResponseWriter, r *http.Request) {
 		"claims":  claims,
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 func main() {
+	port := flag.String(
+		"port",
+		"9082",
+		"Server port",
+	)
+	issuerURL := flag.String(
+		"issuer_url",
+		"http://localhost:9080/realms/keycloak-demo",
+		"Issuer URL",
+	)
+	clientID := flag.String(
+		"client_id",
+		"demo-webapp",
+		"Client ID",
+	)
+	flag.Parse()
+
+	initVerifier(*issuerURL, *clientID)
 	http.HandleFunc("/", authMiddleware(serviceHandler))
 
-	fmt.Println("Server running on port 9082")
-	log.Fatal(http.ListenAndServe(":9082", nil))
+	fmt.Printf("Server running on port %s", *port)
+	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
